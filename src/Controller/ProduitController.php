@@ -17,4 +17,10 @@ class ProduitController extends AbstractController
         // Argument($data, codeStatut, en tete, parametre (exemple : les groups qu'on souhaite))
         return $this->json($produitRepository->findAll(), 200, []);
     }
+
+    #[Route('/produit/{id}', name: 'app_produit', methods:'GET')]
+    public function produit(int $id, ProduitRepository $produitRepository): JsonResponse
+    {
+        return $this->json($produitRepository->find($id), 200, []);
+    }
 }
