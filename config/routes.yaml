@@ -1,3 +1,34 @@
-#index:
+# index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+
+produits:
+   path: /produits
+   controller: App\Controller\ProduitController::index
+   methods: [GET]
+
+produit:
+   path: /produit/{id}
+   controller: App\Controller\ProduitController::produit
+   methods: [GET]
+
+clientUtilisateurs:
+   path: /client/{id}
+   controller: App\Controller\ClientController::index
+   methods: [GET]
+
+detailUtilisateur:
+   path: /client/{idClient}/utilisateur/{idUtilisateur}
+   controller: App\Controller\ClientController::detailUtilisateur
+   methods: [GET]
+
+ajoutUtilisateur:
+   path: /client/{idClient}
+   controller: App\Controller\ClientController::ajoutUtilisateur
+   methods: [POST]
+
+deleteUtilisateur:
+   path: /client/{idClient}/utilisateur/{idUtilisateur}
+   controller: App\Controller\ClientController::suppressionUtilisateur
+   methods: [DELETE]
