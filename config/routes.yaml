@@ -15,20 +15,20 @@ produit:
 
 clientUtilisateurs:
    path: /client/{id}
-   controller: App\Controller\ClientController::index
+   controller: App\Controller\UtilisateurController::getClientUtilisateurs
    methods: [GET]
 
 detailUtilisateur:
    path: /client/{idClient}/utilisateur/{idUtilisateur}
-   controller: App\Controller\ClientController::detailUtilisateur
+   controller: App\Controller\UtilisateurController::detailUtilisateur
    methods: [GET]
 
 ajoutUtilisateur:
    path: /client/{idClient}
-   controller: App\Controller\ClientController::ajoutUtilisateur
+   controller: App\Controller\UtilisateurController::ajoutUtilisateur
    methods: [POST]
 
 deleteUtilisateur:
    path: /client/{idClient}/utilisateur/{idUtilisateur}
-   controller: App\Controller\ClientController::suppressionUtilisateur
+   controller: App\Controller\UtilisateurController::suppressionUtilisateur
    methods: [DELETE]
