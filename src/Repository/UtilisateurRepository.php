@@ -49,6 +49,19 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
             ->getResult();
     }
 
+    public function findUtilisateursByClientIdAndUserId(int $clientId, int $userId)
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.nom', 'u.prenom', 'u.email')
+            ->innerJoin('u.client', 'c')
+            ->where('c.id = :clientId')
+            ->andWhere('u.id = :userId')
+            ->setParameter('clientId', $clientId)
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getResult();
+    }
+
 
 
 //    /**

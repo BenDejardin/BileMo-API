@@ -17,9 +17,15 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class UtilisateurController extends AbstractController
 {
-    #[Route('/client/{id}', name: 'app_utilisateurs', methods:['GET'])]
+    #[Route('/client/{id}', name: 'clientUtilisateurs', methods:['GET'])]
     public function getClientUtilisateurs(int $id, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
         return $this->json($utilisateurRepository->findUtilisateursByClientId($id), 200, [], ['groups' => 'client'] );
+    }
+
+    #[Route('/client/{idClient}/utilisateur/{idUtilisateur}', name: 'detailUtilisateur', methods:['GET'])]
+    public function detailUtilisateur(int $idClient, int $idUtilisateur,UtilisateurRepository $utilisateurRepository): JsonResponse
+    {
+        return $this->json($utilisateurRepository->findUtilisateursByClientIdAndUserId($idClient,$idUtilisateur), 200, [], ['groups' => 'client'] );
     }
 }
