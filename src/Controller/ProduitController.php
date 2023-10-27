@@ -23,7 +23,7 @@ class ProduitController extends AbstractController
     public function produit(int $id, ProduitRepository $produitRepository): JsonResponse
     {
         return !$produitRepository->find($id) 
-        ? $this->json(['status' => 404, 'message' => "Ce produit n'existe pas"])
+        ? $this->json(['status' => 404, 'message' => "Ce produit n'existe pas"], 404)
         :  $this->json($produitRepository->find($id), 200, []);
     }
 }

@@ -31,9 +31,9 @@ class UtilisateurController extends AbstractController
         $utilisateurs = $utilisateurRepository->findUtilisateursByClientId($id);
 
         if (!$this->clientService->isClient($id)) {
-            return $this->json("Le client n'a pas été trouvé.", 404);
+            return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
         } elseif (!$utilisateurs) {
-            return $this->json("Le client n'a pas d'utilisateur lié à lui.", 404);
+            return $this->json(['status' => 400, 'message' => "Le client n'a pas d'utilisateur lié à lui."], 400);
         } else {
             return $this->json($utilisateurs, 200, [], ['groups' => 'client']);
         }
@@ -43,11 +43,11 @@ class UtilisateurController extends AbstractController
     public function detailUtilisateur(int $idClient, int $idUtilisateur, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
         if (!$this->clientService->isClient($idClient)) {
-            return $this->json("Le client n'a pas été trouvé.", 404);
+            return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
         } elseif (!$this->clientService->isUtilisateur($idUtilisateur)) {
-            return $this->json("L'utilisateur n'a pas été trouvé.", 404);
+            return $this->json(['status' => 404, 'message' => "L'utilisateur n'a pas été trouvé."], 404);
         } elseif (!$this->clientService->isClientByUser($idClient, $idUtilisateur)) {
-            return $this->json("Cet utilisateur n'est pas associé à ce client.", 404);
+            return $this->json(['status' => 400, 'message' => "Cet utilisateur n'est pas associé à ce client."], 400);
         } else {
             return $this->json($utilisateurRepository->findUtilisateursByClientIdAndUserId($idClient, $idUtilisateur), 200, [], ['groups' => 'client']);
         }
@@ -55,7 +55,7 @@ class UtilisateurController extends AbstractController
 
     #[Route('/client/{idClient}', name: 'ajoutUtilisateur', methods:['POST'])]
     public function ajoutUtilisateur(int $idClient, Request $request , EntityManagerInterface $entityManager, SerializerInterface $serializer, UserPasswordHasherInterface $passwordHasher, ClientRepository $clientRepository): JsonResponse{
-        return $this->clientService->isClient($idClient) != false ?  $this->json("Le client n'a pas été trouvé.", 404) : "";
+         if($this->clientService->isClient($idClient) == false) return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
 
         try{
             $jsonRecu = $request->getContent();
@@ -77,6 +77,29 @@ class UtilisateurController extends AbstractController
                 'status' => 400,
                 'message' => $e->getMessage()
             ], 400);
+        }
+    }
+
+    #[Route('/client/{idClient}/utilisateur/{idUtilisateur}', name: 'deleteUtilisateur', methods:['DELETE'])]
+    public function suppressionUtilisateur(int $idClient, int $idUtilisateur, EntityManagerInterface $entityManager, UtilisateurRepository $utilisateurRepository): JsonResponse {
+        try {
+            $utilisateur = $utilisateurRepository->find($idUtilisateur);
+
+            if (!$utilisateur) {
+                return $this->json(['status' => 404, 'message' => "L'utilisateur n'a pas été trouvé."], 404);
+            }
+
+            if ($utilisateur->getClient()->getId() != $idClient) {
+                return $this->json(['status' => 400, 'message' => "L'utilisateur n'appartient pas à ce client."], 400);
+            }
+
+            $entityManager->remove($utilisateur);
+            $entityManager->flush();
+
+            return $this->json(['status' => 200, 'message' => "L'utilisateur a bien été supprimé."], 200);
+
+        } catch (\Exception $e) {
+            return $this->json(['status' => 500, 'message' => "Une erreur s'est produite lors de la suppression de l'utilisateur.", 500]);
         }
     }
 }
