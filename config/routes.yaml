@@ -5,7 +5,7 @@
 
 produits:
    path: /produits
-   controller: App\Controller\ProduitController::index
+   controller: App\Controller\ProduitController::produits
    methods: [GET]
 
 produit:
