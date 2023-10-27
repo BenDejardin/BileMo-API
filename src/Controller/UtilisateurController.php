@@ -16,41 +16,52 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Symfony\Contracts\Cache\CacheInterface;
 
 class UtilisateurController extends AbstractController
 {
     private $clientService;
+    private $cache;
 
-    public function __construct(ClientService $clientService) {
+    public function __construct(ClientService $clientService, CacheInterface $cache) {
         $this->clientService = $clientService;
+        $this->cache = $cache;
     }
 
     #[Route('/client/{id}', name: 'clientUtilisateurs', methods: ['GET'])]
     public function getClientUtilisateurs(int $id, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
-        $utilisateurs = $utilisateurRepository->findUtilisateursByClientId($id);
+        // Mise en cache de cette requete 
+        $reponse = $this->cache->get("getUserByClient-".$id, function() use ($utilisateurRepository, $id){
+            $utilisateurs = $utilisateurRepository->findUtilisateursByClientId($id);
+            if (!$this->clientService->isClient($id)) {
+                return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
+            } elseif (!$utilisateurs) {
+                return $this->json(['status' => 400, 'message' => "Le client n'a pas d'utilisateur lié à lui."], 400);
+            } else {
+                return $this->json($utilisateurs, 200, [], ['groups' => 'client']);
+            }
+        });
 
-        if (!$this->clientService->isClient($id)) {
-            return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
-        } elseif (!$utilisateurs) {
-            return $this->json(['status' => 400, 'message' => "Le client n'a pas d'utilisateur lié à lui."], 400);
-        } else {
-            return $this->json($utilisateurs, 200, [], ['groups' => 'client']);
-        }
+        return $reponse;
     }
 
     #[Route('/client/{idClient}/utilisateur/{idUtilisateur}', name: 'detailUtilisateur', methods: ['GET'])]
     public function detailUtilisateur(int $idClient, int $idUtilisateur, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
-        if (!$this->clientService->isClient($idClient)) {
-            return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
-        } elseif (!$this->clientService->isUtilisateur($idUtilisateur)) {
-            return $this->json(['status' => 404, 'message' => "L'utilisateur n'a pas été trouvé."], 404);
-        } elseif (!$this->clientService->isClientByUser($idClient, $idUtilisateur)) {
-            return $this->json(['status' => 400, 'message' => "Cet utilisateur n'est pas associé à ce client."], 400);
-        } else {
-            return $this->json($utilisateurRepository->findUtilisateursByClientIdAndUserId($idClient, $idUtilisateur), 200, [], ['groups' => 'client']);
-        }
+        $reponse = $this->cache->get("detailUtilisateur-id".$idUtilisateur, function () use ($idClient, $idUtilisateur, $utilisateurRepository) {
+            if (!$this->clientService->isClient($idClient)) {
+                return $this->json(['status' => 404, 'message' => "Le client n'a pas été trouvé."], 404);
+            } elseif (!$this->clientService->isUtilisateur($idUtilisateur)) {
+                return $this->json(['status' => 404, 'message' => "L'utilisateur n'a pas été trouvé."], 404);
+            } elseif (!$this->clientService->isClientByUser($idClient, $idUtilisateur)) {
+                return $this->json(['status' => 400, 'message' => "Cet utilisateur n'est pas associé à ce client."], 400);
+            } else {
+                return $this->json($utilisateurRepository->findUtilisateursByClientIdAndUserId($idClient, $idUtilisateur), 200, [], ['groups' => 'client']);
+            }
+        });
+
+        return $reponse;
     }
 
     #[Route('/client/{idClient}', name: 'ajoutUtilisateur', methods:['POST'])]
@@ -92,6 +103,9 @@ class UtilisateurController extends AbstractController
             if ($utilisateur->getClient()->getId() != $idClient) {
                 return $this->json(['status' => 400, 'message' => "L'utilisateur n'appartient pas à ce client."], 400);
             }
+
+            // Vider le cache concernant l'utilisateur
+            $this->cache->delete("detailUtilisateur-id".$idUtilisateur);
 
             $entityManager->remove($utilisateur);
             $entityManager->flush();
