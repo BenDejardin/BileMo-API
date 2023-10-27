@@ -52,4 +52,31 @@ class UtilisateurController extends AbstractController
             return $this->json($utilisateurRepository->findUtilisateursByClientIdAndUserId($idClient, $idUtilisateur), 200, [], ['groups' => 'client']);
         }
     }
+
+    #[Route('/client/{idClient}', name: 'ajoutUtilisateur', methods:['POST'])]
+    public function ajoutUtilisateur(int $idClient, Request $request , EntityManagerInterface $entityManager, SerializerInterface $serializer, UserPasswordHasherInterface $passwordHasher, ClientRepository $clientRepository): JsonResponse{
+        return $this->clientService->isClient($idClient) != false ?  $this->json("Le client n'a pas été trouvé.", 404) : "";
+
+        try{
+            $jsonRecu = $request->getContent();
+            $data = json_decode($jsonRecu, true);
+    
+            $utilisateur = $serializer->deserialize($jsonRecu, Utilisateur::class, 'json');
+    
+            $utilisateur->setRoles(['ROLE_USER']);
+            $utilisateur->setClient($clientRepository->find($idClient));
+            $utilisateur->setPassword($passwordHasher->hashPassword($utilisateur, $data['password']));
+    
+            $entityManager->persist($utilisateur);
+            $entityManager->flush();
+    
+            return $this->json($utilisateur, 200, [], ['groups' => 'client'] );
+        }
+        catch(NotEncodableValueException $e){
+            return $this->json([
+                'status' => 400,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
 }
