@@ -32,3 +32,6 @@ deleteUtilisateur:
    path: /client/{idClient}/utilisateur/{idUtilisateur}
    controller: App\Controller\UtilisateurController::suppressionUtilisateur
    methods: [DELETE]
+
+api_login_check:
+    path: /login
