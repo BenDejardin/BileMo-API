@@ -81,3 +81,22 @@ L'API expose les URI suivants :
 - `DELETE client/{idClient}/utilisateur/{idUtilisateur}` : Supprimer un utilisateur ajouté par un client.
 
 Toutes les réponses de ces endpoints sont mises en cache pour améliorer les performances.
+
+### Pagination
+
+L'API BileMo prend en charge la pagination pour les endpoints qui renvoient une liste d'éléments. La pagination permet de diviser les résultats en pages plus petites, facilitant la navigation à travers un grand ensemble de données.
+
+#### Paramètres de Pagination
+
+Les endpoints prenant en charge la pagination peuvent être configurés à l'aide des paramètres de requête suivants :
+
+- `page` (optionnel) : Numéro de la page souhaitée (par défaut: 1).
+- `limit` (optionnel) : Nombre d'éléments par page (par défaut: 3).
+
+Exemple d'utilisation :
+
+```plaintext
+GET /produits?page=2&limit=4
+```
+
+Cette requête récupérera la deuxième page de résultats, chaque page contenant 4 éléments.
