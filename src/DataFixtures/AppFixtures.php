@@ -1,14 +1,22 @@
 <?php
 namespace App\DataFixtures;
 
-use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Persistence\ObjectManager;
 use App\Entity\Client;
 use App\Entity\Produit;
 use App\Entity\Utilisateur;
+use Doctrine\Persistence\ObjectManager;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    private $userPasswordHasher;
+    
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
     public function load(ObjectManager $manager)
     {
         $data = [
@@ -23,8 +31,8 @@ class AppFixtures extends Fixture
                 ['nom' => 'Produit 3', 'dimension' => '8x12', 'prix' => '80.00', 'marque' => 'Marque C', 'description' => 'Description du Produit 3'],
             ],
             'utilisateurs' => [
-                ['nom' => 'John', 'prenom' => 'Doe', 'email' => 'john.doe@email.com', 'mot_de_passe' => 'motdepasse1', 'role' => 'Utilisateur', 'client_id' => 1],
-                ['nom' => 'Jane', 'prenom' => 'Smith', 'email' => 'jane.smith@email.com', 'mot_de_passe' => 'motdepasse2', 'role' => 'Admin', 'client_id' => 2],
+                ['nom' => 'John', 'prenom' => 'Doe', 'email' => 'john.doe@email.com', 'mot_de_passe' => 'MotDePasse.1', 'client_id' => 1],
+                ['nom' => 'Jane', 'prenom' => 'Smith', 'email' => 'jane.smith@email.com', 'mot_de_passe' => 'motdepasse2', 'client_id' => 2],
                 ['nom' => 'Alice', 'prenom' => 'Johnson', 'email' => 'alice.johnson@email.com', 'mot_de_passe' => 'motdepasse3', 'role' => 'Utilisateur', 'client_id' => 3],
             ],
         ];
@@ -50,15 +58,14 @@ class AppFixtures extends Fixture
             $utilisateur->setNom($utilisateurData['nom']);
             $utilisateur->setPrenom($utilisateurData['prenom']);
             $utilisateur->setEmail($utilisateurData['email']);
-            $utilisateur->setPassword($utilisateurData['mot_de_passe']);
-            $utilisateur->setRoles([$utilisateurData['role']]);
+            $utilisateur->setPassword($this->userPasswordHasher->hashPassword($utilisateur, $utilisateurData['mot_de_passe']));
+            $utilisateur->setRoles(["ROLE_USER"]);
 
             $client = $manager->getRepository(Client::class)->find($utilisateurData['client_id']);
             $utilisateur->setClient($client);
 
             $manager->persist($utilisateur);
         }
-
         $manager->flush();
     }
 }

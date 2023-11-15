@@ -39,6 +39,33 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $this->getEntityManager()->flush();
     }
 
+    public function findUtilisateursByClientIdAndPagination(int $clientId,int $page, int $limit)
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.id', 'u.nom', 'u.prenom', 'u.email')
+            ->where('u.client = :clientId')
+            ->setParameter('clientId', $clientId)
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUtilisateursByClientIdAndUserId(int $clientId, int $userId)
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.nom', 'u.prenom', 'u.email')
+            ->innerJoin('u.client', 'c')
+            ->where('c.id = :clientId')
+            ->andWhere('u.id = :userId')
+            ->setParameter('clientId', $clientId)
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
 //    /**
 //     * @return Utilisateur[] Returns an array of Utilisateur objects
 //     */
